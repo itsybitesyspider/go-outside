@@ -1,0 +1,54 @@
+{
+    "rules": {
+        "strict": [
+            2,
+            "safe"
+        ],
+        "no-unused-vars": [
+            2,
+            { "args": "all",
+              "argsIgnorePattern": "^_" }
+        ],
+        "prefer-const": [
+            2
+        ],
+        "no-var": [
+            2
+        ],
+        "indent": [
+            2,
+            2
+        ],
+        "quotes": [
+            2,
+            "single",
+            { "avoidEscape": true }
+        ],
+        "linebreak-style": [
+            2,
+            "unix"
+        ],
+        "semi": [
+            2,
+            "always"
+        ],
+        "complexity": ["error", 20],
+        "promise/no-return-wrap": "error",
+        "promise/catch-or-return": "error"
+    },
+    "parserOptions": {
+      "ecmaVersion": 2017
+    },
+    "env": {
+      "es6": true,
+      "node": true,
+      "jasmine": true,
+      "browser": true
+    },
+    "plugins": [
+        "promise"
+    ],
+    "extends": [
+      "eslint:recommended"
+    ]
+}
