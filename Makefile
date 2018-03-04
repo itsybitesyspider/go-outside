@@ -1,7 +1,9 @@
-all: 
-	npm install
-	npm test
+build: 
+	yarn
 	cargo build
+
+test:
+	yarn test
 
 clean:
 	npm run clean
