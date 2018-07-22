@@ -7,3 +7,4 @@ authors = ["Christopher Lane Hinson <clanehin@gmail.com>"]
 reqwest = "0.8"
 serde_json = "1.0"
 regex = "0.2"
+clap = "2.29"

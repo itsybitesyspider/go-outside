@@ -1,85 +1,116 @@
+extern crate clap;
 extern crate regex;
 extern crate reqwest;
 extern crate serde_json;
 
-use regex::Regex;
-use serde_json::{Value};
+mod common;
+mod nws;
 
-#[derive(Debug, Clone)]
-struct WeatherPeriod {
-  n : usize,
-  score : f64,
-  human_key : String,
-  human_value: String,
+use serde_json::{Value};
+use std::env;
+
+struct Arguments {
+  now : bool,
+  best : bool,
+  verbose : bool,
+  better_than : f64,
+  worse_than : f64,
+  latitude: f64,
+  longitude: f64
+}
+
+fn parse_args() -> Result<Arguments,String> {
+  let mut result = Arguments {
+    now : false,
+    best : false,
+    verbose : false,
+    better_than : std::f64::INFINITY,
+    worse_than : -std::f64::INFINITY,
+    latitude: 0.0,
+    longitude: 0.0,
+  };
+
+  let args : Vec<String> = env::args().collect();
+
+  let mut i = 1;
+  while i < args.len() {
+    match args[i].as_ref() {
+      "--now" => {
+        result.now = true;
+        i += 1;
+      },
+      "--best" => {
+        result.best = true;
+        i += 1;
+      },
+      "--verbose" => {
+        result.verbose = true;
+        i += 1;
+      },
+      "--worse-than" => {
+        result.worse_than = args[i+1].parse::<f64>().map_err(|_| format!("--worse-than minimum score must be a number"))? / 100.0;
+        i += 2;
+      },
+      "--better-than" => {
+        result.better_than = args[i+1].parse::<f64>().map_err(|_| format!("--better-than maximum score must be a number"))? / 100.0;
+        i += 2;
+      },
+      "--coordinates" => {
+        let latitude = args[i+1].parse().map_err(|_| format!("--coordinates lat long, latitude must be a number"))?;
+        let longitude = args[i+2].parse().map_err(|_| format!("--coordinates lat long, longitude must be a number"))?;
+        result.latitude = latitude;
+        result.longitude = longitude;
+        i += 3;
+      },
+      arg => {
+        return Err(format!("unrecognized argument: {}", arg));
+      }
+    }
+  }
+
+  Ok(result)
 }
 
 fn main() {
-  let uri = "https://api.weather.gov/points/35.7796,-78.6382/forecast";
+  let args = parse_args().unwrap();
+  let uri : String = format!("https://api.weather.gov/points/{},{}/forecast", args.latitude, args.longitude);
 
-  let mut resp = reqwest::get(uri).unwrap();
+  if args.verbose {
+    println!("{}", &uri);
+  }
+
+  let mut resp = reqwest::get(&uri).unwrap();
+
+  if args.verbose {
+    println!("Response text: {}", resp.text().unwrap());
+  }
+
   assert!(resp.status().is_success());
   let json : Value = resp.json().unwrap();
-  let periods = json["properties"]["periods"].as_array().unwrap();
-  let mut results = vec![];
-  let mut count : usize = 0;
 
-  for p in periods {
-    results.push(WeatherPeriod {
-      n: count,
-      score: score(p),
-      human_key: p["name"].as_str().unwrap().to_string(),
-      human_value: p["detailedForecast"].as_str().unwrap().to_string(),
-    });
+  let results = nws::interpret(&json).ok_or(format!("unexpected json response:\n {}", json)).unwrap();
 
-    count = count+1;
-  }
+  let now = common::get_now(&results).clone();
+  let best = common::get_best(&results).clone();
 
-  let now = results[0].clone();
-  let mut best = results[0].clone();
-
-  for r in results {
-    if r.score < best.score {
-      best = r.clone();
+  for result in results {
+    if args.now && result.n != now.n {
+      continue;
     }
+
+    if args.best && result.n != best.n {
+      continue;
+    }
+
+    if result.score <= args.worse_than {
+      continue;
+    }
+
+    if result.score >= args.better_than {
+      continue;
+    }
+
+    println!("({2}) {0}: {1}", result.human_key, result.human_value, (result.score*100.0).round());
   }
-  
-  if now.n == best.n {
-    println!("{}: {}", now.human_key, now.human_value);
-  }
-}
-
-fn score(period : &Value) -> f64 {
-  score_temperature(period["temperature"].as_f64().unwrap()) +
-    score_conditions(period["detailedForecast"].as_str().unwrap())
-}
-
-fn score_temperature(fahrenheits : f64) -> f64 {
-  score_heat(fahrenheits) +
-    score_cold(fahrenheits)
-}
-
-fn score_heat(fahrenheits : f64) -> f64 {
-  let ideal = 75.0;
-  let danger = 105.0;
-  let range = danger - ideal;
-
-  ((fahrenheits - ideal)/range).max(0.0)
-}
-
-fn score_cold(fahrenheits : f64) -> f64 {
-  let ideal = 68.0;
-  let danger = 0.0;
-  let range = ideal - danger;
-  
-  ((ideal - fahrenheits)/range).max(0.0)
-}
-
-fn score_conditions(str : &str) -> f64 {
-  let re = Regex::new(r"[Rr]ain|[Ss]now|[Pp]recipitation|[Ss]howers|[Dd]rizzle").unwrap();
-  if re.is_match(str) {
-    return 1.0;
-  }
-
-  0.0
 }
 
