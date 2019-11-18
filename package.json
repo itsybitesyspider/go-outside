@@ -1,0 +1,20 @@
+{
+  "name": "go-outside",
+  "version": "0.0.0",
+  "description": "Tool to decide whether or not you should go outside today.",
+  "main": "src/main.js",
+  "scripts": {
+    "clean": "rm -rf ./node_modules",
+    "test": "eslint ./src && node ./src/main.js"
+  },
+  "author": "Christopher Lane Hinson <clanehin@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "node-fetch": "^1.7.3"
+  },
+  "devDependencies": {
+    "babel-eslint": "^10.0.1",
+    "eslint": "^4.16.0",
+    "eslint-plugin-promise": "^3.6.0"
+  }
+}
