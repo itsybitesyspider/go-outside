@@ -2,9 +2,11 @@
 name = "go-outside"
 version = "0.1.0"
 authors = ["Christopher Lane Hinson <clanehin@gmail.com>"]
+edition = "2018"
 
 [dependencies]
-reqwest = "0.8"
-serde_json = "1.0"
-regex = "0.2"
-clap = "2.29"
+reqwest = { version = "0.11.0", features = ["json"] }
+serde_json = "1.0.59"
+regex = "1.4.3"
+clap = "2.33.3"
+futures = "0.3"

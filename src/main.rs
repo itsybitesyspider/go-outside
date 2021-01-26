@@ -1,8 +1,3 @@
-extern crate clap;
-extern crate regex;
-extern crate reqwest;
-extern crate serde_json;
-
 mod common;
 mod nws;
 
@@ -72,6 +67,8 @@ fn parse_args() -> Result<Arguments,String> {
 }
 
 fn main() {
+  use futures::executor::block_on;
+
   let args = parse_args().unwrap();
   let uri : String = format!("https://api.weather.gov/points/{},{}/forecast", args.latitude, args.longitude);
 
@@ -79,14 +76,14 @@ fn main() {
     println!("{}", &uri);
   }
 
-  let mut resp = reqwest::get(&uri).unwrap();
-
-  if args.verbose {
-    println!("Response text: {}", resp.text().unwrap());
-  }
+  let resp = block_on(reqwest::get(&uri)).unwrap();
 
   assert!(resp.status().is_success());
-  let json : Value = resp.json().unwrap();
+  let json : Value = block_on(resp.json()).unwrap();
+
+  if args.verbose {
+    println!("Response json: {}", &json);
+  }
 
   let results = nws::interpret(&json).ok_or(format!("unexpected json response:\n {}", json)).unwrap();
 
