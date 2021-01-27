@@ -1,7 +1,7 @@
-use super::regex::Regex;
-use super::serde_json::{Value};
+use regex::Regex;
+use serde_json::{Value};
 
-use common::*;
+use crate::common::*;
 
 pub fn interpret(json: &Value) -> Option<Vec<WeatherPeriod>> {
   let periods = json["properties"]["periods"].as_array()?;
