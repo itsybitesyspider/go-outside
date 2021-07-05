@@ -11,6 +11,10 @@ module.exports.list = async function(lat, lon) {
   const response = await fetch(`https://api.weather.gov/points/${lat},${lon}/forecast`);
   const json = await response.json();
 
+  if( !response.ok ) {
+    throw new Error("Failed to fetch weather: " + JSON.stringify(json,null,2));
+  }
+
   return nws.interpret(json);
 };
 
