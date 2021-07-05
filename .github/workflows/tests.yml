@@ -12,6 +12,4 @@ jobs:
     - name: Setup
       run: cargo install cargo-readme
     - name: Build
-      run: ./bin/build
-    - name: Run tests
-      run: ./bin/test
+      run: ./bin/build.bash
