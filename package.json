@@ -10,7 +10,7 @@
   "author": "Christopher Lane Hinson <clanehin@gmail.com>",
   "license": "ISC",
   "dependencies": {
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^2.6.7"
   },
   "devDependencies": {
     "babel-eslint": "^10.0.1",
